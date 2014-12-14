@@ -4,7 +4,6 @@ import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationListener;
@@ -13,11 +12,11 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.ImageView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
+import com.google.android.gms.maps.GoogleMap.SnapshotReadyCallback;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
@@ -30,6 +29,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.koushikdutta.ion.Ion;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 
@@ -51,6 +51,9 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
     private double add = 0;
     private Bitmap bitmap;
     private Circle circle;
+    private boolean isStarted = false;
+    private float lev;
+    private LatLng pos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,24 +68,24 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
 
         ImageModel item = getIntent().getParcelableExtra("model");
         Future<Bitmap> f = Ion.with(this).load("http://" + item.getUrl()).asBitmap();
-//        try {
-            // bitmap = f.get();
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.smile);
+        try {
+            bitmap = f.get();
             height = bitmap.getHeight();
             width = bitmap.getWidth();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+//        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.smile);
 
-            ImageView imageView = (ImageView) findViewById(R.id.image);
-            imageView.setImageBitmap(bitmap);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
+        final ImageView imageView = (ImageView) findViewById(R.id.image);
+        imageView.setImageBitmap(bitmap);
 //        }
         progress = new ProgressDialog(this);
         progress.setMessage("位置情報を取得中");
         progress.show();
 
-        final Button btn = (Button) findViewById(R.id.btn);
+        final View btn = findViewById(R.id.btn);
+//        btn.setText("終了");
         btn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,12 +106,31 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                pos = googleMap.getCameraPosition().target;
+                                lev = googleMap.getCameraPosition().zoom;
                                 setOverlay();
-                                btn.setText("スタート");
+//                                btn.setText("スタート");
                                 btn.setOnClickListener(new OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        btn.setText("終了");
+                                        isStarted = true;
+//                                        btn.setText("終了");
+                                        btn.setOnClickListener(new OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                googleMap.snapshot(new SnapshotReadyCallback() {
+                                                    @Override
+                                                    public void onSnapshotReady(Bitmap bitmap) {
+                                                        ImageView im = new ImageView(getApplicationContext());
+                                                        im.setImageBitmap(bitmap);
+                                                        new Builder(MapActivity.this)
+                                                                .setTitle("結果")
+                                                                .setView(im)
+                                                                .show();
+                                                    }
+                                                });
+                                            }
+                                        });
                                     }
                                 });
                             }
@@ -152,8 +174,7 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
                 .fillColor(getResources().getColor(android.R.color.holo_green_dark)));
 
 
-        Button btn = (Button) findViewById(R.id.btn);
-        if (!btn.getText().equals("終了")) {
+        if (isStarted) {
             return;
         }
 
@@ -190,12 +211,15 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
         googleMap.setOnMapClickListener(this);
+//        LatLng latLng = new LatLng(35.648911, 139.702034);
+//        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, ZOOM_LEVEL));
+
 //        googleMap.setMyLocationEnabled(true);
     }
 
     @Override
     public void onMapClick(LatLng latLng) {
-   }
+    }
 
     private void setOverlay() {
         CameraPosition cameraPosition = googleMap.getCameraPosition();
@@ -211,7 +235,8 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
         googleMap.addGroundOverlay(
                 new GroundOverlayOptions()
                         .position(centerPosition, meters)
-                .image(BitmapDescriptorFactory.fromResource(R.drawable.smile))
+                        .bearing(cameraPosition.bearing)
+                        .image(BitmapDescriptorFactory.fromResource(R.drawable.smile))
 //                        .image(BitmapDescriptorFactory.fromBitmap(bitmap))
         );
 

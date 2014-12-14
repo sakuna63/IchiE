@@ -33,7 +33,7 @@
 
         <activity
             android:name=".MapActivity"
-            android:label="@string/title_activity_map" >
+            android:label="ichie" >
         </activity>
         <activity
             android:name=".SplashActivity"

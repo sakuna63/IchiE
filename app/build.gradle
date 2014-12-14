@@ -25,5 +25,7 @@ dependencies {
     compile 'com.google.android.gms:play-services:6.5.87'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.squareup.okhttp:okhttp:2.1.0'
-    compile 'com.koushikdutta.ion:ion:2.+'
+    compile 'com.koushikdutta.ion:ion:2.0.2'
+    compile 'com.github.markushi:circlebutton:1.1'
+    compile 'com.koushikdutta.async:androidasync:2.0.2'
 }
