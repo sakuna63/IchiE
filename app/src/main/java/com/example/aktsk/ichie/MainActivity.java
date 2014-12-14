@@ -26,6 +26,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        getSupportActionBar().setIcon(R.drawable.logo);
+//        getSupportActionBar().setTitle("");
 
 //        startActivity(new Intent(this, MapActivity.class));
 
@@ -36,7 +38,10 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                 findViewById(R.id.label_progress).setVisibility(View.GONE);
                 GridView listview = (GridView) findViewById(R.id.list_images);
                 listview.setVisibility(View.VISIBLE);
-                ImageModelAdapter adapter = new ImageModelAdapter(MainActivity.this, items);
+                ArrayList<ImageModel> item = new ArrayList<ImageModel>();
+                item.add(new ImageModel("フリーラン", null, -1));
+                item.addAll(items);
+                ImageModelAdapter adapter = new ImageModelAdapter(MainActivity.this, item);
                 listview.setAdapter(adapter);
                 listview.setOnItemClickListener(MainActivity.this);
             }
@@ -80,7 +85,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
                     JSONObject object1 = object.getJSONObject("Image");
                     String path = object1.getString("path");
                     String name = object1.getString("name");
-                    items.add(new ImageModel(name, path));
+                    int good = Integer.parseInt(object1.getString("good"));
+                    items.add(new ImageModel(name, path, good));
                 }
                 return items;
             } catch (IOException e) {

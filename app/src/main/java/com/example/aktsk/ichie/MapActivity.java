@@ -2,17 +2,22 @@ package com.example.aktsk.ichie;
 
 import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore.Images;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
+import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
@@ -59,6 +64,10 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+//        getSupportActionBar().setIcon(R.drawable.logo);
+//        getSupportActionBar().setTitle();
+
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         requestLocationUpdates();
 
@@ -67,6 +76,49 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
         mapFragment.getMapAsync(this);
 
         ImageModel item = getIntent().getParcelableExtra("model");
+        if (item.getGood() == -1) {
+            progress = new ProgressDialog(this);
+            progress.setMessage("位置情報を取得中");
+            progress.show();
+
+            // フリーラン
+            final View btn = findViewById(R.id.btn);
+            final TextView label = (TextView) findViewById(R.id.label_btn);
+            label.setText("GO");
+            btn.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    isStarted = true;
+                    label.setText("FIN");
+                    btn.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            googleMap.snapshot(new SnapshotReadyCallback() {
+                                @Override
+                                public void onSnapshotReady(final Bitmap bitmap) {
+                                    ImageView im = new ImageView(getApplicationContext());
+                                    im.setImageBitmap(bitmap);
+                                    new Builder(MapActivity.this)
+                                            .setTitle("結果")
+                                            .setView(im)
+                                            .setPositiveButton("シェア", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    Intent intent = new Intent(Intent.ACTION_SEND);
+                                                    intent.setType("image/jpeg");
+                                                    intent.putExtra(Intent.EXTRA_STREAM, getImageUri(getApplicationContext(), bitmap));
+                                                    startActivity(intent);
+                                                }
+                                            })
+                                            .show();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
         Future<Bitmap> f = Ion.with(this).load("http://" + item.getUrl()).asBitmap();
         try {
             bitmap = f.get();
@@ -85,7 +137,8 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
         progress.show();
 
         final View btn = findViewById(R.id.btn);
-//        btn.setText("終了");
+        final TextView label = (TextView) findViewById(R.id.label_btn);
+        label.setText("SET");
         btn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -109,23 +162,33 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
                                 pos = googleMap.getCameraPosition().target;
                                 lev = googleMap.getCameraPosition().zoom;
                                 setOverlay();
+                                label.setText("GO");
 //                                btn.setText("スタート");
                                 btn.setOnClickListener(new OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         isStarted = true;
-//                                        btn.setText("終了");
+                                        label.setText("FIN");
                                         btn.setOnClickListener(new OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
                                                 googleMap.snapshot(new SnapshotReadyCallback() {
                                                     @Override
-                                                    public void onSnapshotReady(Bitmap bitmap) {
+                                                    public void onSnapshotReady(final Bitmap bitmap) {
                                                         ImageView im = new ImageView(getApplicationContext());
                                                         im.setImageBitmap(bitmap);
                                                         new Builder(MapActivity.this)
                                                                 .setTitle("結果")
                                                                 .setView(im)
+                                                                .setPositiveButton("シェア", new DialogInterface.OnClickListener() {
+                                                                    @Override
+                                                                    public void onClick(DialogInterface dialog, int which) {
+                                                                        Intent intent = new Intent(Intent.ACTION_SEND);
+                                                                        intent.setType("image/jpeg");
+                                                                        intent.putExtra(Intent.EXTRA_STREAM, getImageUri(getApplicationContext(), bitmap));
+                                                                        startActivity(intent);
+                                                                    }
+                                                                })
                                                                 .show();
                                                     }
                                                 });
@@ -137,6 +200,11 @@ public class MapActivity extends ActionBarActivity implements LocationListener, 
                         }).setNegativeButton("キャンセル", null).show();
             }
         });
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        String path = Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
     }
 
     private void requestLocationUpdates() {

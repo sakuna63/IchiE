@@ -28,15 +28,27 @@
         android:src="@drawable/ic_launcher"
         />
 
-
-    <at.markushi.ui.CircleButton
-        android:id="@+id/btn"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_margin="16dp"
-        android:src="@drawable/finish"
-        app:cb_color="#FF9800"
-        app:cb_pressedRingWidth="8dip" />
+        >
+        <at.markushi.ui.CircleButton
+            android:id="@+id/btn"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_margin="16dp"
+            app:cb_color="#FF9800"
+            app:cb_pressedRingWidth="8dip" />
+        <TextView
+            android:id="@+id/label_btn"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GO"
+            />
+    </FrameLayout>
+
 </RelativeLayout>

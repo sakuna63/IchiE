@@ -4,8 +4,8 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import com.example.aktsk.ichie.SplashActivity.SendIdTask.Callback;
 import com.example.aktsk.ichie.SplashActivity.SendIdTask.Result;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MultipartBuilder;
@@ -26,30 +26,34 @@ public class SplashActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+//        progress = new ProgressDialog(SplashActivity.this);
+//                progress.setMessage("認証中");
+//                progress.show();
 
-        if (isLogin()) {
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-        }
-
-//        TelephonyManager manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        String id = UUID.randomUUID().toString();
-        new SendIdTask(new Callback() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onResult(Result result) {
-                if (result.equals(Result.SUCCESS)) {
-                    PrefUtil.saveLogined(getApplicationContext());
+            public void run() {
+                if (isLogin()) {
                     Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                     startActivity(intent);
+                    finish();
                 }
+
+                String id = UUID.randomUUID().toString();
+                new SendIdTask(new SendIdTask.Callback() {
+                    @Override
+                    public void onResult(Result result) {
+                        if (result.equals(Result.SUCCESS)) {
+                            PrefUtil.saveLogined(getApplicationContext());
+                            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    }
+                }).execute(id);
             }
-        }).execute(id);
-
-        progress = new ProgressDialog(this);
-        progress.setMessage("認証中");
-        progress.show();
-
-        // TODO: send id and launch mainactivity when callbacked
+        }, 3000);
     }
 
     private boolean isLogin() {

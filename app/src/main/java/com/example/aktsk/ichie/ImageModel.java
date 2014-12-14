@@ -6,10 +6,12 @@ import android.os.Parcelable;
 public class ImageModel implements Parcelable {
     private String name;
     private String path;
+    private int good;
 
-    public ImageModel(String name, String url) {
+    public ImageModel(String name, String url, int good) {
         this.name = name;
         this.path = url;
+        this.good = good;
     }
 
     public String getName() {
@@ -18,6 +20,10 @@ public class ImageModel implements Parcelable {
 
     public String getUrl() {
         return path;
+    }
+
+    public int getGood() {
+        return good;
     }
 
     @Override
