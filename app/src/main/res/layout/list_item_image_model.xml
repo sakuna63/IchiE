@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <!--<com.example.aktsk.ichie.SquareImageView-->
+    <ImageView
+        android:id="@+id/icon_stamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:src="@drawable/ic_launcher"
+        android:adjustViewBounds="true"
+        android:src="@drawable/ic_launcher"
+        />
+
+    <TextView
+        android:id="@android:id/text1"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:background="@color/background_material_dark"
+        android:textColor="@color/primary_text_default_material_dark"
+        android:text="test"
+        tools:text="test"
+        />
+
+</LinearLayout>
